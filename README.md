@@ -5,7 +5,7 @@ https://nextjs.org/learn?utm_source=next-site&utm_medium=homepage-cta&utm_campai
 https://aie-feb-25.vercel.app/docs
 
 ## CHANGELOG
-- MCP 지원
+- OpenAI MCP CALL(Responses API) 지원
 - Claude Opus 4 지원
 - Claude Sonnet 4 지원
 - Research Agent 전용 React Context 설계 / 적용
