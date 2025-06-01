@@ -100,6 +100,9 @@ export const providers: ProviderInfo[] = [
 
 https://github.com/user-attachments/assets/80b5b476-9d8b-453b-ae1d-96b07634acd6
 
+## 📹 MCP Demo
+
+https://github.com/user-attachments/assets/6373b1b5-9331-4dab-b340-535798b5a354
 
 ### Google Gemini 기반 검색 챗봇 개발 작업일지 (2024.04.23)
 
