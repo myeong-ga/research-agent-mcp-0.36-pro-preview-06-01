@@ -205,8 +205,8 @@ export function MCPControlSection({ className }: MCPControlSectionProps) {
                   <SelectContent>
                     <SelectItem value="gpt-4.1-mini">gpt-4.1-mini</SelectItem>
                     <SelectItem value="gpt-4.1">gpt-4.1</SelectItem>
-                    <SelectItem value="o1">o1 (OpenAI)</SelectItem>
-                    <SelectItem value="o1-mini">o1-mini (OpenAI)</SelectItem>
+                    <SelectItem value="o4-mini">o4-mini</SelectItem>
+                    <SelectItem value="o3">o3</SelectItem>
                   </SelectContent>
                 </Select>
                 <div className="flex gap-2">

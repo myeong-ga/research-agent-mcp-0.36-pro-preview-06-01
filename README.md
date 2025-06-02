@@ -12,7 +12,7 @@ https://aie-feb-25.vercel.app/docs
 - gemini-2.5-flash-preview-05-20 지원 ( Google I/O 2025 에서 발표)
 - Gemini "Thought summaries" 지원
 - Google Gemini : Google Gen AI SDK for TypeScript , Gemini API 적용
-- OpenAI "Reasoning summaries" 지원 
+- OpenAI "Reasoning summaries" 지원. (Reasoning summaries are available at no additional cost 😄 )
 - OpenAI : OpenAI nodejs SDK , OpenAI Responses API 적용
 - Anthropic "thinking enabled" 지원
 - Anthropic SDK TypeScript , Anthropic Messages API 적용
