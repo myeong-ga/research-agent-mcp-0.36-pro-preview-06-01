@@ -98,7 +98,7 @@ export const providers: ProviderInfo[] = [
 ```
 ## 📹 Demo
 
-https://github.com/user-attachments/assets/80b5b476-9d8b-453b-ae1d-96b07634acd6
+https://github.com/user-attachments/assets/8363f023-5b66-4282-8dec-3f068f1a74d7
 
 ## 📹 MCP Demo
 
