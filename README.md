@@ -5,7 +5,7 @@ https://nextjs.org/learn?utm_source=next-site&utm_medium=homepage-cta&utm_campai
 https://aie-feb-25.vercel.app/docs
 
 ## CHANGELOG
-- MCP CALL 에 O3 모델 "Reasoning Summarues" 지원 - "Agentic Tool Calling" 구현
+- MCP CALL 에 O3 모델 "Reasoning Summaries" 지원 - "Agentic Tool Calling" 구현
 - Task 선택시, 같은 모델을 사용하는 Task인 경우 response ID를 유지하여 연속성을 보장합니다.
 - OpenAI 의 "Reasoning summaries" 에 의한 token 발생은 추가과금이 없습니다 😄
 - OpenAI MCP CALL(Responses API) 지원
@@ -33,13 +33,17 @@ Claude 4, Gemini 2.5 pro 그리고 o3 , o4-mini Thinking 모델을 한자리에 
 - 사용자는 어떤 키워드로 검색을 확장해야 할지에 대한 고민을 LLM에게 위임함으로써, 결과 분석 및 종합이라는 고차원적 사고에 더 집중할 수 있습니다.
 
 ## SDKs & API
-### Model's Web Search Capabilities Comparision
-- Google Gemini : Vercel AI SDK
-- OpenAI : Vercel AI SDK , OpenAI Responses API
-- Anthropic : Anthropic SDK TypeScript , Anthropic Messages API 
+### MCP Agent
+- OpenAI : OpenAI nodejs SDK , OpenAI Responses API , o3 "Reasoning Summaries"
+
 ### Research Agent
 - Google Gemini : Google Gen AI SDK for TypeScript , Gemini API
 - OpenAI : OpenAI nodejs SDK , OpenAI Responses API
+- Anthropic : Anthropic SDK TypeScript , Anthropic Messages API 
+
+### Model's Web Search Capabilities Comparision
+- Google Gemini : Vercel AI SDK
+- OpenAI : Vercel AI SDK , OpenAI Responses API
 - Anthropic : Anthropic SDK TypeScript , Anthropic Messages API 
 
 ## Models 
