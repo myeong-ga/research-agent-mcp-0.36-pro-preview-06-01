@@ -24,9 +24,10 @@ import {
 import { useMCPAgent } from "@/hooks/store/mcp/use-mcp-agent"
 import { useAgentMcpContext } from "@/contexts/agent-mcp-context"
 import { cn } from "@/lib/utils"
-import type { MCPServerConfig } from "@/lib/mcp"
-import { ConnectingStickerAnimated } from "./connecting-sticker-animated" // Import the new sticker
+import type { MCPServerConfig, MCPTask } from "@/lib/mcp"
+import { ConnectingStickerAnimated } from "./connecting-sticker-animated"
 import { MarkdownText } from "./markdown-text"
+import { ThinkingBlock } from "./thinking-block"
 
 interface MCPDemoSectionProps {
   className?: string
@@ -47,6 +48,11 @@ function getRandomUniqueSuggestions(allPrompts: string[], count: number): string
   const uniquePrompts = Array.from(new Set(allPrompts))
   const shuffled = [...uniquePrompts].sort(() => 0.5 - Math.random())
   return shuffled.slice(0, Math.min(count, shuffled.length))
+}
+
+function getTaskDisplayName(task: MCPTask): string {
+  const robotIcon = task.reasoningType === "Thinking" ? "🧠" : "🤖"
+  return `${task.name} ${robotIcon} ${task.model}`
 }
 
 export function MCPDemoSection({ className }: MCPDemoSectionProps) {
@@ -102,6 +108,7 @@ export function MCPDemoSection({ className }: MCPDemoSectionProps) {
   }, [input])
 
   useEffect(() => {
+    // console.log("Messages updated:", messages)
     if (scrollAreaRef.current) {
       const scrollViewport = scrollAreaRef.current.querySelector('div[style*="overflow: scroll;"]') as HTMLElement
       if (scrollViewport) {
@@ -199,10 +206,19 @@ export function MCPDemoSection({ className }: MCPDemoSectionProps) {
         <ScrollArea className="flex-1" ref={scrollAreaRef}>
           <div className="p-4 space-y-4">
             {messages.map((message, index) => {
-              if (message.role === "tool_approval") {
+              // Skip rendering assistant messages with empty content
+              if (message.role === "assistant" && (!message.content || message.content.trim() === "")) {
+                return null
+              }
+
+              if (message.role === "thinking") {
+                return <ThinkingBlock key={message.id} message={message} provider={message.provider} className="mb-4" />
+              }
+
+              if (message.role === "system") {
                 return (
                   <div
-                    key={index}
+                    key={message.id}
                     className={cn(
                       "p-3 my-2 max-w-[90%] mx-auto rounded-md shadow-md",
                       approvalResultBg,
@@ -220,9 +236,10 @@ export function MCPDemoSection({ className }: MCPDemoSectionProps) {
                   </div>
                 )
               }
+
               return (
                 <div
-                  key={index}
+                  key={message.id}
                   className={`p-3 rounded-lg shadow-sm break-words text-sm ${
                     message.role === "user"
                       ? `bg-[#D8A0A7]/20 dark:bg-[#C98A9A]/20 ${lightText} ${darkText} ml-auto max-w-[80%]`
@@ -379,7 +396,7 @@ export function MCPDemoSection({ className }: MCPDemoSectionProps) {
                       disabled={chatActiveTaskId === task.id}
                       className={cn(`hover:${lightInputBg} dark:hover:${darkInputBg}`)}
                     >
-                      {task.name}
+                      {getTaskDisplayName(task)}
                     </DropdownMenuItem>
                   ))}
                 </DropdownMenuContent>

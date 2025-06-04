@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { OpenAI } from "openai"
-import type { ApiRouteRequestBody } from "@/lib/mcp"
+import type { ApiRouteRequestBody, ReasoningConfig } from "@/lib/mcp"
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -25,6 +25,10 @@ function isOpenAIError(error: unknown): error is OpenAIErrorShape {
   return false
 }
 
+function shouldUseReasoning(model: string): boolean {
+  return model === "o3" || model === "o1-mini"
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body: ApiRouteRequestBody = await request.json()
@@ -36,12 +40,20 @@ export async function POST(request: NextRequest) {
       input: [],
     }
 
+    if (shouldUseReasoning(model || "gpt-4.1-mini")) {
+      const reasoning: ReasoningConfig = {
+        effort: "medium",
+        summary: "auto",
+      }
+      requestPayload.reasoning = reasoning
+    }
+
     if (previous_response_id) {
       requestPayload.previous_response_id = previous_response_id
     }
 
     if (input && Array.isArray(input) && input.length > 0) {
-      requestPayload.input = input 
+      requestPayload.input = input
     } else if (!previous_response_id) {
       return NextResponse.json(
         { error: "Invalid request: 'input' array is required for new responses." },

@@ -23,6 +23,7 @@ export function AgentMcpProvider({ children }: { children: ReactNode }) {
       id: "default",
       name: "Store(MPC)",
       model: "gpt-4.1-mini",
+      reasoningType: "Intelligence",
       servers: [],
     },
   ])

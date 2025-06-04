@@ -79,12 +79,36 @@ export function useOpenaiMcpProvider(): MCPClientStore {
               try {
                 const event = JSON.parse(dataString)
 
-                if (event.type === "response.created" && event.response?.id) {
+                if (event.response?.id && !currentResponseIdFromStream) {
                   currentResponseIdFromStream = event.response.id
-                  callback({ type: "response_id", responseId: currentResponseIdFromStream as string})
                 }
 
-                if (event.type === "response.output_item.done" && event.item?.type === "mcp_approval_request") {
+                if (event.type === "response.created" && event.response?.id) {
+                  currentResponseIdFromStream = event.response.id
+                  callback({ type: "response_id", responseId: currentResponseIdFromStream! })
+                } else if (event.type === "response.reasoning_summary_text.delta") {
+                  callback({
+                    type: "thinking_delta",
+                    content: event.delta,
+                    summaryIndex: event.summary_index,
+                    itemId: event.item_id,
+                    responseId: currentResponseIdFromStream,
+                  })
+                } else if (event.type === "response.reasoning_summary_text.done") {
+                  callback({
+                    type: "thinking_done",
+                    content: event.text,
+                    summaryIndex: event.summary_index,
+                    itemId: event.item_id,
+                    responseId: currentResponseIdFromStream,
+                  })
+                } else if (event.type === "response.output_item.done" && event.item?.type === "reasoning") {
+                  callback({
+                    type: "reasoning_complete",
+                    content: event.item.summary,
+                    responseId: currentResponseIdFromStream,
+                  })
+                } else if (event.type === "response.output_item.done" && event.item?.type === "mcp_approval_request") {
                   const approvalItem = event.item as OpenAIApprovalRequestItem
                   callback({
                     type: "approval_request",

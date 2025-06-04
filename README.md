@@ -5,6 +5,9 @@ https://nextjs.org/learn?utm_source=next-site&utm_medium=homepage-cta&utm_campai
 https://aie-feb-25.vercel.app/docs
 
 ## CHANGELOG
+- MCP CALL 에 O3 모델 "Reasoning Summarues" 지원 - "Agentic Tool Calling" 구현
+- Task 선택시, 같은 모델을 사용하는 Task인 경우 response ID를 유지하여 연속성을 보장합니다.
+- OpenAI 의 "Reasoning summaries" 에 의한 token 발생은 추가과금이 없습니다 😄
 - OpenAI MCP CALL(Responses API) 지원
 - Claude Opus 4 지원
 - Claude Sonnet 4 지원

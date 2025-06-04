@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Plus, Trash2, Loader2, AlertCircle, Settings, XIcon } from "lucide-react"
 import { useAgentMcpContext } from "@/contexts/agent-mcp-context"
 import type { MCPServerConfig, MCPTask } from "@/lib/mcp"
+import { providers } from "@/lib/providers"
 
 interface MCPControlSectionProps {
   className?: string
@@ -54,7 +55,19 @@ const predefinedServers: PredefinedServer[] = [
     label: "airbnb",
     url: "https://server.smithery.ai/@openbnb-org/mcp-server-airbnb/mcp?api_key=af39d80a-b79d-4c24-a516-a18cb76ef126",
   },
+  {
+    id: "ssg",
+    name: "세상 스윗 그리다 (SSG)",
+    iconSrc: "/assets/icons/ssg.webp",
+    label: "ssg",
+    url: "https://server.smithery.ai/@isnow890/naver-search-mcp/mcp?api_key=ac6a6360-3ee6-4ae6-8e57-51e9ebcbb979&profile=residential-octopus-YMSEGy",
+  },
 ]
+
+function getTaskDisplayName(task: MCPTask): string {
+  const robotIcon = task.reasoningType === "Thinking" ? "🧠" : "🤖"
+  return `${task.name} ${robotIcon} ${task.model}`
+}
 
 export function MCPControlSection({ className }: MCPControlSectionProps) {
   const { tasks, configActiveTaskId, setConfigActiveTaskId, updateTask, addTask } = useAgentMcpContext()
@@ -120,6 +133,7 @@ export function MCPControlSection({ className }: MCPControlSectionProps) {
     const selectedToolNames = fetchedTools.filter((tool) => tool.selected).map((tool) => tool.name)
 
     const newServer: MCPServerConfig = {
+      id: `server-${Date.now()}`,
       label: newServerLabel,
       url: newServerUrl,
       allowedTools: selectedToolNames.length > 0 ? selectedToolNames : undefined,
@@ -148,10 +162,15 @@ export function MCPControlSection({ className }: MCPControlSectionProps) {
 
   const addNewTask = () => {
     if (!newTaskName.trim()) return
+
+    const selectedProvider = providers.find((provider) => provider.models.some((model) => model.id === newTaskModel))
+    const selectedModel = selectedProvider?.models.find((model) => model.id === newTaskModel)
+
     const newTask: MCPTask = {
       id: `task-${Date.now()}`,
       name: newTaskName,
       model: newTaskModel,
+      reasoningType: selectedModel?.reasoningType || "Intelligence",
       servers: [],
     }
     addTask(newTask)
@@ -203,10 +222,13 @@ export function MCPControlSection({ className }: MCPControlSectionProps) {
                     <SelectValue placeholder="Select model for new task" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="gpt-4.1-mini">gpt-4.1-mini</SelectItem>
-                    <SelectItem value="gpt-4.1">gpt-4.1</SelectItem>
-                    <SelectItem value="o4-mini">o4-mini</SelectItem>
-                    <SelectItem value="o3">o3</SelectItem>
+                    {providers.flatMap((provider) =>
+                      provider.models.map((model) => (
+                        <SelectItem key={`${provider.id}-${model.id}`} value={model.id}>
+                          {model.name} ({provider.name}) - {model.reasoningType}
+                        </SelectItem>
+                      )),
+                    )}
                   </SelectContent>
                 </Select>
                 <div className="flex gap-2">
@@ -244,7 +266,7 @@ export function MCPControlSection({ className }: MCPControlSectionProps) {
                 )}
                 {tasks.map((task) => (
                   <SelectItem key={task.id} value={task.id}>
-                    {task.name} 🤖 {task.model}
+                    {getTaskDisplayName(task)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -252,9 +274,7 @@ export function MCPControlSection({ className }: MCPControlSectionProps) {
           </div>
 
           <div className="space-y-3">
-            <Label className="text-sm font-normal mb-3 mt-3 pt-3 block">
-              해당관심사에 등록된 서버
-            </Label>
+            <Label className="text-sm font-normal mb-3 mt-3 pt-3 block">해당관심사에 등록된 서버</Label>
             {activeConfigTask?.servers.map((server, index) => (
               <div key={index} className="flex items-center gap-2 p-3 border rounded-md bg-muted/20">
                 <div className="flex-1">
@@ -319,9 +339,7 @@ export function MCPControlSection({ className }: MCPControlSectionProps) {
               )}
 
               <div className="pt-4">
-                <Label className="text-muted-foreground mb-3 block text-center">
-                  Or use a predefined MCP server:
-                </Label>
+                <Label className="text-muted-foreground mb-3 block text-center">Or use a predefined MCP server:</Label>
                 <div className="grid grid-cols-2 gap-3">
                   {predefinedServers.map((server) => (
                     <Button

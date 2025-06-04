@@ -13,7 +13,7 @@ export function ConnectingStickerAnimated({ className }: ConnectingStickerProps)
   useEffect(() => {
     const interval = setInterval(() => {
       setRotation((prev) => (prev === 2 ? -1.5 : 2)) // Slightly different rotation range
-    }, 2500) // Slightly different interval
+    }, 400) // Slightly different interval
 
     return () => clearInterval(interval)
   }, [])
@@ -21,10 +21,11 @@ export function ConnectingStickerAnimated({ className }: ConnectingStickerProps)
   return (
     <div
       className={cn(
-        "inline-flex items-center justify-center px-3 py-1 text-xs font-bold rounded-full select-none transition-transform duration-1000 ease-in-out",
+        "inline-flex items-center justify-center px-3 py-1 text-xs font-bold rounded-full select-none transition-all duration-250 ease-in-out animate-pulse",
         "bg-[#FEF3C7] text-[#D90429]", // Yellow background, Red text
         "border-2 border-[#D90429]", // Red border
         "shadow-[2px_2px_0px_0px_rgba(217,4,41,0.4)]", // Red shadow
+        "hover:scale-105", // 호버 시 스케일 효과 추가
         className,
       )}
       style={{ transform: `rotate(${rotation}deg)` }}
@@ -34,7 +35,7 @@ export function ConnectingStickerAnimated({ className }: ConnectingStickerProps)
         {/* Optional: subtle text shadow or glow if needed, but keeping it simple for now */}
         {/* <span className="absolute -top-0.5 -left-0.5 w-full h-full blur-[0.25px] opacity-60 text-red-300">Now Connecting</span> */}
         Now Connecting
-        <span className="absolute -bottom-[2px] -right-[2px] w-2 h-2 rounded-full bg-white/60 animate-pulse"></span>
+        <span className="absolute -bottom-[2px] -right-[2px] w-2 h-2 rounded-full bg-white/60 animate-ping"></span>
       </span>
     </div>
   )

@@ -1,18 +1,20 @@
 "use client"
 
-import { useState, useCallback, useEffect } from "react"
+import { useState, useCallback, useEffect, useRef } from "react"
 import type {
   MCPAgentState,
   OpenAIMcpTool,
   MCPApprovalRequest,
   MCPApprovalResponseItem,
   OpenAIAPIInputItem,
-} from "@/lib/mcp" // Ensure this path is correct
-import { useOpenaiMcpProvider } from "./use-openai-mcp-provider" // Ensure this path is correct
+} from "@/lib/mcp"
+import type { Message } from "@/lib/types"
+import { nanoid } from "@/lib/nanoid"
+import { useOpenaiMcpProvider } from "./use-openai-mcp-provider"
 import { useAgentMcpContext } from "@/contexts/agent-mcp-context"
 
 interface UseMCPAgentOptions {
-  provider?: "openai" // Currently only supporting openai
+  provider?: "openai"
 }
 
 export interface MCPRequestOptions {
@@ -32,6 +34,9 @@ export type MCPProviderCallbackEvent =
   | { type: "response_id"; responseId: string }
   | { type: "done"; responseId: string | null }
   | { type: "error"; error: string; responseId: string | null }
+  | { type: "thinking_delta"; content: string; summaryIndex: number; itemId: string; responseId: string | null }
+  | { type: "thinking_done"; content: string; summaryIndex: number; itemId: string; responseId: string | null }
+  | { type: "reasoning_complete"; content: string; responseId: string | null }
 
 export type MCPProviderCallback = (event: MCPProviderCallbackEvent) => void
 
@@ -50,12 +55,12 @@ export function useMCPAgent(options: UseMCPAgentOptions = {}) {
   })
   const [currentResponseId, setCurrentResponseId] = useState<string | null>(null)
   const [accumulatedDelta, setAccumulatedDelta] = useState<string>("")
+  const previousTaskModelRef = useRef<string | null>(null)
 
-  const { chatActiveTaskId, getTaskById } = useAgentMcpContext() // Uses chatActiveTaskId
+  const { chatActiveTaskId, getTaskById } = useAgentMcpContext()
   const openaiProvider = useOpenaiMcpProvider()
 
   const getProvider = (): MCPClientStore => {
-    // Extend this if more providers are added
     return openaiProvider
   }
 
@@ -65,15 +70,55 @@ export function useMCPAgent(options: UseMCPAgentOptions = {}) {
     }
 
     switch (event.type) {
+      case "thinking_delta":
+        setState((prev) => {
+          const existingThinkingMessage = prev.messages.find(
+            (msg) => msg.id === event.itemId && msg.role === "thinking",
+          )
+
+          if (existingThinkingMessage) {
+            return {
+              ...prev,
+              messages: prev.messages.map((msg) =>
+                msg.id === event.itemId ? { ...msg, content: msg.content + event.content } : msg,
+              ),
+            }
+          } else {
+            const newThinkingMessage: Message = {
+              id: event.itemId,
+              role: "thinking",
+              content: event.content,
+              provider: "openai",
+            }
+            return {
+              ...prev,
+              messages: [...prev.messages, newThinkingMessage],
+            }
+          }
+        })
+        break
+      case "thinking_done":
+        setState((prev) => ({
+          ...prev,
+          messages: prev.messages.map((msg) => (msg.id === event.itemId ? { ...msg, content: event.content } : msg)),
+        }))
+        break
+      case "reasoning_complete":
+        console.log("Reasoning complete:", event.content)
+        break
       case "message_delta":
         setAccumulatedDelta((prev) => {
           const newContent = prev + event.content
           setState((s) => {
-            const lastMessage = s.messages[s.messages.length - 1]
-            if (lastMessage && lastMessage.role === "assistant" && s.isLoading) {
-              const updatedMessages = [...s.messages]
-              updatedMessages[s.messages.length - 1] = { ...lastMessage, content: newContent }
-              return { ...s, messages: updatedMessages }
+            const lastAssistantMessage = [...s.messages].reverse().find((msg) => msg.role === "assistant")
+
+            if (lastAssistantMessage) {
+              return {
+                ...s,
+                messages: s.messages.map((msg) =>
+                  msg.id === lastAssistantMessage.id ? { ...msg, content: newContent } : msg,
+                ),
+              }
             }
             return s
           })
@@ -81,26 +126,30 @@ export function useMCPAgent(options: UseMCPAgentOptions = {}) {
         })
         break
       case "message":
-        setAccumulatedDelta("") // Reset delta when full message arrives
-        setState((prev) => ({
-          ...prev,
-          messages: prev.messages.map((msg, index) =>
-            index === prev.messages.length - 1 && msg.role === "assistant"
-              ? { ...msg, content: event.content } // Update last assistant message
-              : msg,
-          ),
-        }))
+        setAccumulatedDelta("")
+        setState((prev) => {
+          const lastAssistantMessage = [...prev.messages].reverse().find((msg) => msg.role === "assistant")
+
+          if (lastAssistantMessage) {
+            return {
+              ...prev,
+              messages: prev.messages.map((msg) =>
+                msg.id === lastAssistantMessage.id ? { ...msg, content: event.content } : msg,
+              ),
+            }
+          }
+          return prev
+        })
         break
       case "approval_request":
         setAccumulatedDelta("")
         setState((prev) => ({
           ...prev,
           pendingApprovalRequest: event.data,
-          isLoading: false, // Stop loading while waiting for approval
+          isLoading: false,
         }))
         break
       case "response_id":
-        // Handled by setting currentResponseId
         break
       case "done":
         setAccumulatedDelta("")
@@ -129,16 +178,27 @@ export function useMCPAgent(options: UseMCPAgentOptions = {}) {
         return
       }
 
+      const userMessage: Message = {
+        id: nanoid(),
+        role: "user",
+        content: userInput,
+      }
+
+      const assistantMessage: Message = {
+        id: nanoid(),
+        role: "assistant",
+        content: "",
+        provider: "openai",
+      }
+
       setState((prev) => ({
         ...prev,
         isLoading: true,
         error: null,
         pendingApprovalRequest: null,
-        messages: [...prev.messages, { role: "user", content: userInput }],
+        messages: [...prev.messages, userMessage, assistantMessage],
       }))
-      setAccumulatedDelta("") // Reset before new message stream
-      // Add a placeholder for assistant's response
-      setState((prev) => ({ ...prev, messages: [...prev.messages, { role: "assistant", content: "" }] }))
+      setAccumulatedDelta("")
 
       try {
         const mcpTools: OpenAIMcpTool[] = task.servers.map((server) => ({
@@ -153,9 +213,9 @@ export function useMCPAgent(options: UseMCPAgentOptions = {}) {
           model: task.model,
           tools: mcpTools,
           temperature: 1,
-          max_output_tokens: 2048,
+          max_output_tokens: task.model === "o3" ? 8000 : 2048,
           stream: true,
-          previous_response_id: currentResponseId, // Continue conversation if ID exists
+          previous_response_id: currentResponseId,
         }
 
         const providerImpl = getProvider()
@@ -198,20 +258,26 @@ export function useMCPAgent(options: UseMCPAgentOptions = {}) {
       return
     }
 
+    const approvalMessage: Message = {
+      id: nanoid(),
+      role: "system",
+      content: `Tool call to "${requestToApprove.toolName}" with Arguments "${requestToApprove.toolArguments}" on server "${requestToApprove.serverLabel}" was ${approve ? "approved" : "declined"}.`,
+    }
+
+    const assistantMessage: Message = {
+      id: nanoid(),
+      role: "assistant",
+      content: "",
+      provider: "openai",
+    }
+
     setState((prev) => ({
       ...prev,
-      messages: [
-        ...prev.messages,
-        {
-          role: "tool_approval",
-          content: `Tool call to "${requestToApprove.toolName}" on server "${requestToApprove.serverLabel}" was ${approve ? "approved" : "declined"}.`,
-        },
-      ],
+      messages: [...prev.messages, approvalMessage, assistantMessage],
       pendingApprovalRequest: null,
-      isLoading: true, // Start loading for the continuation
+      isLoading: true,
     }))
     setAccumulatedDelta("")
-    setState((prev) => ({ ...prev, messages: [...prev.messages, { role: "assistant", content: "" }] }))
 
     const approvalResponseItem: MCPApprovalResponseItem = {
       type: "mcp_approval_response",
@@ -249,13 +315,36 @@ export function useMCPAgent(options: UseMCPAgentOptions = {}) {
     }))
     setCurrentResponseId(null)
     setAccumulatedDelta("")
+    previousTaskModelRef.current = null
   }, [])
 
+  const clearStateByActiveTaskId = useCallback(() => {
+    const currentTask = chatActiveTaskId ? getTaskById(chatActiveTaskId) : null
+    const currentModel = currentTask?.model || null
+    const previousModel = previousTaskModelRef.current
+
+    setState((prev) => ({
+      ...prev,
+      pendingApprovalRequest: null,
+      error: null,
+      isLoading: false,
+    }))
+
+    if (previousModel !== null && currentModel !== previousModel) {
+      setCurrentResponseId(null)
+    }
+
+    setAccumulatedDelta("")
+    previousTaskModelRef.current = currentModel
+  }, [chatActiveTaskId, getTaskById])
+
   useEffect(() => {
-    // If chatActiveTaskId changes, clear messages and reset conversation state
-    // This prevents carrying over a conversation from a different task
     clearMessages()
-  }, [chatActiveTaskId, clearMessages])
+  }, [clearMessages])
+
+  useEffect(() => {
+    clearStateByActiveTaskId()
+  }, [chatActiveTaskId, clearStateByActiveTaskId])
 
   return {
     ...state,
