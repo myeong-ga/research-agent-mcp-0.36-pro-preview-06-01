@@ -5,6 +5,7 @@ https://nextjs.org/learn?utm_source=next-site&utm_medium=homepage-cta&utm_campai
 https://aie-feb-25.vercel.app/docs
 
 ## CHANGELOG
+- Gemini Research Agent 에  Web Search Tool 추가
 - MCP CALL 에 O3 모델 "Reasoning Summaries" 지원 - "Agentic Tool Calling" 구현
 - Task 선택시, 같은 모델을 사용하는 Task인 경우 response ID를 유지하여 연속성을 보장합니다.
 - OpenAI 의 "Reasoning summaries" 에 의한 token 발생은 추가과금이 없습니다 😄
