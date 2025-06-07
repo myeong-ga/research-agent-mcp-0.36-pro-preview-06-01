@@ -1,8 +1,5 @@
 import type { ProviderInfo } from "./types"
 
-// 원론적 입장에서 생각하면 모델의 web search tool 의 사용은 thinking ( test time scaling ) 능력과 연관이 깊다.
-// Thinking 모델 대상으로 profile / benchmark 진행되어야 한다.
-// Gemini : 검색기반 Agent , OpenAI : Knowledge기반 Agent 로 posiiton
 
 export const providers: ProviderInfo[] = [
     {
@@ -28,8 +25,8 @@ export const providers: ProviderInfo[] = [
       { id: "gemini-2.0-flash", name: "Gemini 2.0 Flash", reasoningType: "Intelligence" },
       { id: "gemini-2.5-flash-preview-05-20", name: "gemini-2.5-flash-preview-05-20", reasoningType: "Thinking" , isDefault: true,},
       {
-        id: "gemini-2.5-pro-preview-05-06",
-        name: "gemini-2.5-pro-preview-05-06",
+        id: "gemini-2.5-pro-preview-06-05",
+        name: "gemini-2.5-pro-preview-06-05",
         reasoningType: "Thinking",
       },
     ],

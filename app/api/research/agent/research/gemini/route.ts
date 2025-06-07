@@ -129,6 +129,7 @@ export async function POST(req: NextRequest) {
               topP: modelConfig.topP,
               candidateCount: 1,
               thinkingConfig: { includeThoughts: true , thinkingBudget: 1600 },
+              tools: [{googleSearch: {}}],
             },
           })
 

@@ -25,7 +25,7 @@ export const model_config: ModelConfigInfo[] = [
     config: { temperature: 1, topP: 1, maxTokens: 4000 },
   },
   {
-    id: "gemini-2.5-pro-preview-05-06",
+    id: "gemini-2.5-pro-preview-06-05",
     name: "Gemini 2.5 Pro Preview",
     description: "Preview version of Google's most capable multimodal AI model.",
     config: { temperature: 1, topP: 1, maxTokens: 4000 },
